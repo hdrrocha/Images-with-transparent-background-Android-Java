@@ -1,0 +1,74 @@
+private void exportPDF() throws IOException{				
+		InputStream inputStreamPdfFile = getAssets().open("ContratoFrete.pdf");
+		PDDocument documentPdf = PDDocument.load(inputStreamPdfFile);
+		PDPage page = documentPdf.getPage(0);
+		
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+      //  Bitmap vvvv = makeTransparent(signatureView.getSignatureBitmap());
+      //  Bitmap vvvv = signatureView.getSignatureBitmap();
+        
+     //   vvvv.compress(Bitmap.CompressFormat.JPEG, 100, baos);
+        PDImageXObject image = JPEGFactory.createFromStream(documentPdf, new ByteArrayInputStream(baos.toByteArray()));
+        //PDImageXObject image = LosslessFactory.createFromImage(documentPdf, vvvv);
+        
+        //buttonExportPDF.setBackgroundDrawable(new BitmapDrawable(getResources(), image.getImage()));
+                		
+		PDPageContentStream stream = new PDPageContentStream(documentPdf, page, true, true);
+
+        //int numOfPixels = image.getWidth() * image.getHeight();
+		//imageScaleFactor = Math.sqrt((double) pixels_limit / (double) numOfPixels);
+		//stream.drawXObject(image, page.getMediaBox().getWidth() / 3, page.getMediaBox().getHeight() / 5.5f, page.getMediaBox().getWidth() / 3, page.getMediaBox().getHeight() / 8f); //CONTRATO
+		
+		float width = page.getMediaBox().getWidth() / 4;
+		float height = page.getMediaBox().getHeight() / 14;
+		float x = (page.getMediaBox().getWidth() / 2) + (page.getMediaBox().getWidth() / 8);
+		float y = 75;
+		stream.drawXObject(image, x, y, width, height);  //ContratoFrete
+		//stream.drawXObject(image, page.getMediaBox().getWidth() / 3, page.getMediaBox().getHeight() / 5.5f, page.getMediaBox().getWidth() / 3, page.getMediaBox().getHeight() / 8f);  //ContratoFrete
+        		
+		stream.close();
+                
+        documentPdf.save(Environment.getExternalStorageDirectory().toString()+"/ContratoFreteAssinado.pdf");
+        documentPdf.close();
+        
+        //Toast.makeText(ActivitySignature.this, "Assinado PDF com sucesso! Arquivo está no dispositivo com o nome 'ContratoAssinado.pdf'!", Toast.LENGTH_SHORT).show();
+        finish();
+        File file = new File(Environment.getExternalStorageDirectory().toString()+"/ContratoFreteAssinado.pdf");
+        displayPdf(file);
+	}
+	
+	// Convert transparentColor to be transparent in a Bitmap.
+	public static Bitmap makeTransparent(Bitmap bit) {
+	    int width =  bit.getWidth();
+	    int height = bit.getHeight();
+	    Bitmap myBitmap = Bitmap.createBitmap(width, height, Bitmap.Config.ARGB_8888);
+	    int [] allpixels = new int [ myBitmap.getHeight()*myBitmap.getWidth()];
+	    bit.getPixels(allpixels, 0, myBitmap.getWidth(), 0, 0, myBitmap.getWidth(),myBitmap.getHeight());
+	    myBitmap.setPixels(allpixels, 0, width, 0, 0, width, height);
+
+	    for(int i =0; i<myBitmap.getHeight()*myBitmap.getWidth();i++){
+	     if(allpixels[i] == Color.WHITE)
+	    	 allpixels[i] = Color.alpha(Color.TRANSPARENT);
+	     }
+
+	      myBitmap.setPixels(allpixels, 0, myBitmap.getWidth(), 0, 0, myBitmap.getWidth(), myBitmap.getHeight());
+	      return myBitmap;
+	}
+
+	public void displayPdf(File file) {
+
+        if(file.exists()) {
+            Intent target = new Intent(Intent.ACTION_VIEW);
+            target.setDataAndType(Uri.fromFile(file), "application/pdf");
+            target.setFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+
+            Intent intent = Intent.createChooser(target, "Abrir arquivo");
+            try {
+                startActivity(intent);
+            } catch (ActivityNotFoundException e) {
+                e.printStackTrace();
+            }
+        } else {
+            Toast.makeText(getApplicationContext(), "Problemas ao abrir arquivo." , Toast.LENGTH_SHORT).show();
+        }
+    }
